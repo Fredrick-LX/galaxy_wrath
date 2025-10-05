@@ -1,5 +1,7 @@
 # 🌌 星河之怒 (Galaxy Wrath)
 
+~~以下内容为AI总结，部分存在扯淡情况，象征性看看得了~~
+
 <div align="center">
 
 ![Vue](https://img.shields.io/badge/Vue-3.x-4FC08D?style=flat-square&logo=vue.js)
@@ -26,7 +28,7 @@
 
 ### 🎨 视觉体验
 - **冷色调科幻风格**: 深蓝主色调，避免刺眼光效
-- **60FPS流畅渲染**: Pixi.js + pixi-viewport实现高性能2D渲染
+- **60FPS流畅渲染**: Pixi.js + pixi-viewport实现高性能2D渲染(由于屎山,并非高性能)
 - **动态星空背景**: Canvas粒子系统，鼠标视差效果
 - **响应式设计**: 适配不同屏幕尺寸
 
@@ -284,12 +286,6 @@ graph TB
 | 💰 离线收益 | ✅ 完成 | 100% | 25%收益率/最大24小时 |
 | 🎨 UI界面 | ✅ 完成 | 100% | 冷色调科幻风格/响应式 |
 
-### 📈 项目统计
-- **总代码量**: 8000+ 行
-- **文件数量**: 51个
-- **功能模块**: 24个
-- **完成度**: 100% ✅
-
 ---
 
 ## 🔧 开发指南
@@ -384,7 +380,5 @@ DB_PATH=./data/galaxy_wrath_db
 <div align="center">
 
 **🌟 如果这个项目对你有帮助，请给个 Star！**
-
-Made with ❤️ by [Your Name]
 
 </div>
