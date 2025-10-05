@@ -1,11 +1,11 @@
 {
   "name": "galaxy_wrath",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "private": true,
   "scripts": {
-    "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
+    "dev_run_backend": "pnpm --filter backend dev",
+    "dev_run_frontend": "pnpm --filter frontend dev",
+    "build:frontend": "pnpm --filter frontend build"
   },
   "dependencies": {
     "core-js": "^3.8.3",
