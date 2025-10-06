@@ -9,6 +9,7 @@ import { assignStartingPlanet } from './universeService';
 import { productionEngine, calculateOfflineRewards } from './productionService';
 import { OFFLINE_BONUS_RATE, MAX_OFFLINE_HOURS } from '../config/constants';
 import { verifyToken } from '../utils/jwt';
+import { generateGalaxyPlanets, getPlanetAtPosition } from '../utils/galaxyGenerator';
 import type { Planet } from '../types';
 
 export class SocketEventsHandler {
@@ -462,6 +463,79 @@ export class SocketEventsHandler {
           callback({ 
             success: false, 
             message: '领取离线收益失败' 
+          });
+        }
+      });
+      
+      // ============ 宇宙相关事件 ============
+      
+      // 获取星系中的所有行星
+      socket.on('universe:get-galaxy-planets', async (data: { galaxyId: string }, callback) => {
+        if (!this.requireAuth(socket, callback)) return;
+        
+        try {
+          const { galaxyId } = data;
+          
+          if (!galaxyId) {
+            callback({ 
+              success: false, 
+              message: '缺少星系ID' 
+            });
+            return;
+          }
+          
+          // 使用噪声生成器生成星系中的行星
+          const planets = generateGalaxyPlanets(galaxyId);
+          
+          callback({
+            success: true,
+            galaxyId,
+            planets
+          });
+        } catch (error) {
+          console.error('获取星系行星失败:', error);
+          callback({ 
+            success: false, 
+            message: '获取星系行星失败' 
+          });
+        }
+      });
+      
+      // 获取特定位置的行星信息
+      socket.on('universe:get-planet-at-position', async (data: { galaxyId: string; position: number }, callback) => {
+        if (!this.requireAuth(socket, callback)) return;
+        
+        try {
+          const { galaxyId, position } = data;
+          
+          if (!galaxyId || position === undefined) {
+            callback({ 
+              success: false, 
+              message: '缺少必要参数' 
+            });
+            return;
+          }
+          
+          // 获取特定位置的行星
+          const planet = getPlanetAtPosition(galaxyId, position);
+          
+          if (!planet) {
+            callback({ 
+              success: false, 
+              message: '该位置没有行星' 
+            });
+            return;
+          }
+          
+          callback({
+            success: true,
+            planet
+          });
+        } catch (error) {
+          console.error('获取行星信息失败:', error);
+          callback({ 
+            success: false, 
+            message: '获取行星信息失败' 
           });
         }
       });

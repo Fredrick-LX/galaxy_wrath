@@ -1,6 +1,6 @@
 /**
  * 后端服务入口文件
- * 纯 Socket.io 架构（类似 stardust_war）
+ * 纯 Socket.io 架构
  */
 
 import { createServer } from 'node:http';

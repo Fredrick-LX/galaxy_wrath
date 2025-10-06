@@ -4,40 +4,19 @@
 
 import { GLOBAL_SEED, INITIAL_RESOURCES } from '../config/constants';
 import type { Planet } from '../types';
-
-/**
- * 生成简单的哈希值（用于种子生成）
- */
-function simpleHash(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
-  }
-  return Math.abs(hash);
-}
-
-/**
- * 简单的随机数生成器
- */
-function seededRandom(seed: number): () => number {
-  let state = seed;
-  return () => {
-    state = (state * 9301 + 49297) % 233280;
-    return state / 233280;
-  };
-}
+import { createSeededRandom } from '../utils/noiseGenerator';
+import { generateGalaxyPlanets } from '../utils/galaxyGenerator';
+import { generateBalancedStartingZones } from '../utils/planetGenerator';
 
 /**
  * 为新玩家分配初始行星
  */
 export async function assignStartingPlanet(userId: string): Promise<Planet> {
-  // 使用用户ID生成唯一的星系坐标
-  const userSeed = simpleHash(userId);
-  const rng = seededRandom(userSeed + GLOBAL_SEED);
+  // 使用用户ID和全局种子生成唯一的随机数生成器
+  const userSeed = `${GLOBAL_SEED}_user_${userId}`;
+  const rng = createSeededRandom(userSeed);
   
-  // 在较远的范围内随机选择一个空星系
+  // 在较远的范围内随机选择一个星系坐标
   const gridX = Math.floor((rng() - 0.5) * 100); // -50 到 50
   const gridY = Math.floor((rng() - 0.5) * 100);
   
@@ -60,19 +39,33 @@ export async function assignStartingPlanet(userId: string): Promise<Planet> {
     }
   }
   
-  // 在星系中随机选择一个行星位置（0-80）
-  const position = Math.floor(rng() * 81);
-  const planetId = `${galaxyId}_${position}`;
+  // 生成该星系的所有行星
+  const galaxyPlanets = generateGalaxyPlanets(galaxyId);
   
-  // 生成初始行星（简化版本，实际应该从前端生成算法获取）
+  // 如果星系中没有行星，尝试其他星系
+  if (galaxyPlanets.length === 0) {
+    // 递归尝试下一个星系（通过修改用户ID的种子）
+    return assignStartingPlanet(userId + '_retry');
+  }
+  
+  // 随机选择一个行星
+  const randomIndex = Math.floor(rng() * galaxyPlanets.length);
+  const selectedPlanet = galaxyPlanets[randomIndex];
+  
+  const planetId = `${galaxyId}_${selectedPlanet.position}`;
+  
+  // 使用噪声生成器生成行星区划
+  const zones = generateBalancedStartingZones(planetId, selectedPlanet.size);
+  
+  // 生成初始行星
   const planet: Planet = {
     id: planetId,
     galaxyId,
-    position,
-    type: 'tropical', // 初始行星固定为热带类型（适合新手）
-    size: 5, // 中等大小
+    position: selectedPlanet.position,
+    type: selectedPlanet.type,
+    size: selectedPlanet.size,
     ownerId: userId,
-    zones: generateInitialZones(5),
+    zones,
     buildings: [],
     resources: { ...INITIAL_RESOURCES }
   };
@@ -80,44 +73,6 @@ export async function assignStartingPlanet(userId: string): Promise<Planet> {
   return planet;
 }
 
-/**
- * 生成初始区划（简化版本）
- */
-function generateInitialZones(size: number): any[][] {
-  const zones: any[][] = [];
-  
-  for (let y = 0; y < size; y++) {
-    const row: any[] = [];
-    for (let x = 0; x < size; x++) {
-      // 简单的区划分布
-      let type = 'wasteland';
-      const sum = x + y;
-      
-      if (sum < size) {
-        type = 'mining';
-      } else if (sum < size * 1.5) {
-        type = 'power';
-      } else {
-        type = 'agricultural';
-      }
-      
-      const colors: Record<string, string> = {
-        mining: '#8B6914',
-        power: '#4A90E2',
-        agricultural: '#4CAF50',
-        wasteland: '#6B6B6B'
-      };
-      
-      row.push({
-        type,
-        color: colors[type]
-      });
-    }
-    zones.push(row);
-  }
-  
-  return zones;
-}
 
 /**
  * 检查行星是否已被占领

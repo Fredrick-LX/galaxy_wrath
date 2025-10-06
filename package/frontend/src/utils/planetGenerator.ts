@@ -4,23 +4,10 @@
 
 import seedrandom from 'seedrandom';
 import type { Planet, PlanetType, Zone, ZoneType } from '../types/planet';
-import { PLANET_TYPE_MODIFIERS, ZONE_COLORS } from '../types/planet';
+import { ZONE_COLORS } from '../types/planet';
 import { INITIAL_RESOURCES } from '../types/resource';
 import type { NoiseGenerator } from './noiseGenerator';
 import type { GalaxyConfig } from './galaxyGenerator';
-
-/**
- * 所有行星类型
- */
-const PLANET_TYPES: PlanetType[] = [
-  'mountain',
-  'swamp',
-  'frozen',
-  'lava',
-  'arid',
-  'tropical',
-  'tundra'
-];
 
 /**
  * 根据行星类型和噪声值生成区划分布
@@ -206,12 +193,10 @@ export function generatePlanet(
 }
 
 /**
- * 生成行星名称（基于位置和类型）
+ * 生成行星名称（基于星系ID和种子）
  */
 export function generatePlanetName(
   galaxyId: string,
-  position: number,
-  planetType: PlanetType,
   seed: number
 ): string {
   const rng = seedrandom(seed.toString());
