@@ -9,7 +9,9 @@
     <div v-if="selectedPosition" class="selected-info">
       <div class="info-item">
         <span class="label">位置:</span>
-        <span class="value">({{ selectedPosition.x }}, {{ selectedPosition.y }})</span>
+        <span class="value"
+          >({{ selectedPosition.x }}, {{ selectedPosition.y }})</span
+        >
       </div>
       <div class="info-item">
         <span class="label">区划:</span>
@@ -20,10 +22,14 @@
     <!-- 已有建筑信息 -->
     <div v-if="existingBuilding" class="building-info">
       <div class="building-header">
-        <span class="building-icon">{{ getBuildingIcon(existingBuilding.type) }}</span>
+        <span class="building-icon">{{
+          getBuildingIcon(existingBuilding.type)
+        }}</span>
         <div class="building-details">
           <h4>{{ getBuildingName(existingBuilding.type) }}</h4>
-          <p class="building-desc">{{ getBuildingDesc(existingBuilding.type) }}</p>
+          <p class="building-desc">
+            {{ getBuildingDesc(existingBuilding.type) }}
+          </p>
         </div>
       </div>
 
@@ -34,7 +40,9 @@
         </div>
         <div class="stat-item">
           <span class="label">状态:</span>
-          <span class="value">{{ getStatusText(existingBuilding.status) }}</span>
+          <span class="value">{{
+            getStatusText(existingBuilding.status)
+          }}</span>
         </div>
         <div class="stat-item">
           <span class="label">相邻加成:</span>
@@ -45,10 +53,16 @@
       <!-- 生产信息 -->
       <div v-if="existingBuilding.status === 'active'" class="production-info">
         <h5>生产</h5>
-        <div v-for="(amount, resource) in existingBuilding.production.output" :key="resource" class="production-item">
+        <div
+          v-for="(amount, resource) in existingBuilding.production.output"
+          :key="resource"
+          class="production-item"
+        >
           <span class="resource-icon">{{ getResourceIcon(resource) }}</span>
           <span class="resource-name">{{ getResourceName(resource) }}</span>
-          <span class="resource-amount">+{{ calculateProduction(amount) }}/秒</span>
+          <span class="resource-amount"
+            >+{{ calculateProduction(amount) }}/秒</span
+          >
         </div>
       </div>
 
@@ -60,14 +74,16 @@
           class="btn-action btn-upgrade"
           :disabled="upgrading"
         >
-          {{ upgrading ? '升级中...' : `升级 (Lv.${existingBuilding.level + 1})` }}
+          {{
+            upgrading ? "升级中..." : `升级 (Lv.${existingBuilding.level + 1})`
+          }}
         </button>
         <button
           @click="handleDemolish"
           class="btn-action btn-demolish"
           :disabled="demolishing"
         >
-          {{ demolishing ? '拆除中...' : '拆除建筑' }}
+          {{ demolishing ? "拆除中..." : "拆除建筑" }}
         </button>
       </div>
     </div>
@@ -90,17 +106,23 @@
               <p>{{ config.description }}</p>
             </div>
           </div>
-          
+
           <div class="option-cost">
             <span class="cost-label">建造消耗:</span>
             <div class="cost-items">
-              <span v-for="(amount, resource) in config.cost" :key="resource" class="cost-item">
-                <span class="resource-icon">{{ getResourceIcon(resource) }}</span>
+              <span
+                v-for="(amount, resource) in config.cost"
+                :key="resource"
+                class="cost-item"
+              >
+                <span class="resource-icon">{{
+                  getResourceIcon(resource)
+                }}</span>
                 {{ amount }}
               </span>
             </div>
           </div>
-          
+
           <div class="option-time">
             <span>⏱️ {{ config.buildTime }}秒</span>
           </div>
@@ -115,12 +137,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import { usePlanetStore } from '../stores/planet';
-import { BUILDING_CONFIGS, type BuildingType } from '../types/building';
-import type { Building } from '../types/building';
-import type { ZoneType } from '../types/planet';
-import { ZONE_TYPE_NAMES } from '../types/planet';
+import { computed, ref } from "vue";
+import { usePlanetStore } from "../stores/planet";
+import { BUILDING_CONFIGS, type BuildingType } from "../types/building";
+import type { Building } from "../types/building";
+import type { ZoneType } from "../types/planet";
+import { ZONE_TYPE_NAMES } from "../types/planet";
 
 const emit = defineEmits<{
   close: [];
@@ -139,16 +161,19 @@ const selectedPosition = computed(() => planetStore.selectedPosition);
 
 // 当前位置的区划类型
 const currentZoneType = computed(() => {
-  if (!selectedPosition.value || !planetStore.currentPlanet) return '';
+  if (!selectedPosition.value || !planetStore.currentPlanet) return "";
   const { x, y } = selectedPosition.value;
   const zone = planetStore.currentPlanet.zones[y]?.[x];
-  return zone ? ZONE_TYPE_NAMES[zone.type] : '';
+  return zone ? ZONE_TYPE_NAMES[zone.type] : "";
 });
 
 // 已有建筑
 const existingBuilding = computed(() => {
   if (!selectedPosition.value) return null;
-  return planetStore.getBuildingAt(selectedPosition.value.x, selectedPosition.value.y);
+  return planetStore.getBuildingAt(
+    selectedPosition.value.x,
+    selectedPosition.value.y
+  );
 });
 
 // 相邻加成
@@ -167,7 +192,7 @@ const canUpgrade = computed(() => {
 // 可用建筑列表
 const availableBuildings = computed(() => {
   if (!selectedPosition.value || !planetStore.currentPlanet) return [];
-  
+
   const { x, y } = selectedPosition.value;
   const zone = planetStore.currentPlanet.zones[y]?.[x];
   if (!zone) return [];
@@ -182,17 +207,17 @@ const availableBuildings = computed(() => {
  */
 function getBuildingIcon(type: string): string {
   const icons: Record<string, string> = {
-    miningDrill: '⛏️',
-    powerPlant: '⚡',
-    hydroponicFarm: '🌾',
-    refinery: '🏭',
-    transformer: '🔋',
-    foodProcessor: '🏪',
-    residentialBlock: '🏘️',
-    systemFortress: '🏰',
-    colonyShipyard: '🚀'
+    miningDrill: "⛏️",
+    powerPlant: "⚡",
+    hydroponicFarm: "🌾",
+    refinery: "🏭",
+    transformer: "🔋",
+    foodProcessor: "🏪",
+    residentialBlock: "🏘️",
+    systemFortress: "🏰",
+    colonyShipyard: "🚀",
   };
-  return icons[type] || '🏗️';
+  return icons[type] || "🏗️";
 }
 
 /**
@@ -206,7 +231,7 @@ function getBuildingName(type: string): string {
  * 获取建筑描述
  */
 function getBuildingDesc(type: string): string {
-  return BUILDING_CONFIGS[type as BuildingType]?.description || '';
+  return BUILDING_CONFIGS[type as BuildingType]?.description || "";
 }
 
 /**
@@ -214,9 +239,9 @@ function getBuildingDesc(type: string): string {
  */
 function getStatusText(status: string): string {
   const statusMap: Record<string, string> = {
-    building: '建造中',
-    active: '运行中',
-    upgrading: '升级中'
+    building: "建造中",
+    active: "运行中",
+    upgrading: "升级中",
   };
   return statusMap[status] || status;
 }
@@ -226,14 +251,14 @@ function getStatusText(status: string): string {
  */
 function getResourceIcon(resource: string): string {
   const icons: Record<string, string> = {
-    minerals: '⛏️',
-    energy: '⚡',
-    food: '🌾',
-    alloys: '🔩',
-    powerCells: '🔋',
-    consumerGoods: '📦'
+    minerals: "⛏️",
+    energy: "⚡",
+    food: "🌾",
+    alloys: "🔩",
+    powerCells: "🔋",
+    consumerGoods: "📦",
   };
-  return icons[resource] || '📦';
+  return icons[resource] || "📦";
 }
 
 /**
@@ -241,12 +266,12 @@ function getResourceIcon(resource: string): string {
  */
 function getResourceName(resource: string): string {
   const names: Record<string, string> = {
-    minerals: '矿物',
-    energy: '电力',
-    food: '食物',
-    alloys: '合金',
-    powerCells: '电池',
-    consumerGoods: '消费品'
+    minerals: "矿物",
+    energy: "电力",
+    food: "食物",
+    alloys: "合金",
+    powerCells: "电池",
+    consumerGoods: "消费品",
   };
   return names[resource] || resource;
 }
@@ -272,7 +297,7 @@ function canAfford(config: any): boolean {
  */
 function handleBuild(config: any) {
   if (!canAfford(config)) return;
-  emit('build', config.type as BuildingType);
+  emit("build", config.type as BuildingType);
 }
 
 /**
@@ -282,9 +307,9 @@ async function handleUpgrade() {
   if (!existingBuilding.value) return;
   upgrading.value = true;
   try {
-    emit('upgrade', existingBuilding.value.id);
+    emit("upgrade", existingBuilding.value.id);
     // TODO: 等待升级完成
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
   } finally {
     upgrading.value = false;
   }
@@ -295,13 +320,13 @@ async function handleUpgrade() {
  */
 async function handleDemolish() {
   if (!existingBuilding.value) return;
-  
-  if (!confirm('确定要拆除这个建筑吗？')) return;
-  
+
+  if (!confirm("确定要拆除这个建筑吗？")) return;
+
   demolishing.value = true;
   try {
-    emit('demolish', existingBuilding.value.id);
-    await new Promise(resolve => setTimeout(resolve, 500));
+    emit("demolish", existingBuilding.value.id);
+    await new Promise((resolve) => setTimeout(resolve, 500));
   } finally {
     demolishing.value = false;
   }
@@ -330,14 +355,14 @@ async function handleDemolish() {
 
 .panel-header h3 {
   margin: 0;
-  color: #4A90E2;
+  color: #4a90e2;
   font-size: 20px;
 }
 
 .btn-close {
   background: none;
   border: none;
-  color: #8FA3C1;
+  color: #8fa3c1;
   font-size: 24px;
   cursor: pointer;
   padding: 0;
@@ -350,7 +375,7 @@ async function handleDemolish() {
 }
 
 .btn-close:hover {
-  color: #FF6B7A;
+  color: #ff6b7a;
 }
 
 .selected-info {
@@ -373,11 +398,11 @@ async function handleDemolish() {
 }
 
 .info-item .label {
-  color: #8FA3C1;
+  color: #8fa3c1;
 }
 
 .info-item .value {
-  color: #E0E6F0;
+  color: #e0e6f0;
   font-weight: 600;
 }
 
@@ -398,13 +423,13 @@ async function handleDemolish() {
 
 .building-details h4 {
   margin: 0 0 4px 0;
-  color: #4A90E2;
+  color: #4a90e2;
   font-size: 18px;
 }
 
 .building-desc {
   margin: 0;
-  color: #8FA3C1;
+  color: #8fa3c1;
   font-size: 13px;
 }
 
@@ -424,17 +449,17 @@ async function handleDemolish() {
 }
 
 .stat-item .label {
-  color: #8FA3C1;
+  color: #8fa3c1;
 }
 
 .stat-item .value {
-  color: #4A90E2;
+  color: #4a90e2;
   font-weight: 600;
 }
 
 .production-info h5 {
   margin: 0 0 8px 0;
-  color: #5FD98A;
+  color: #5fd98a;
   font-size: 16px;
 }
 
@@ -455,11 +480,11 @@ async function handleDemolish() {
 
 .resource-name {
   flex: 1;
-  color: #B0C4DE;
+  color: #b0c4de;
 }
 
 .resource-amount {
-  color: #5FD98A;
+  color: #5fd98a;
   font-weight: 600;
 }
 
@@ -480,24 +505,24 @@ async function handleDemolish() {
 }
 
 .btn-upgrade {
-  background: linear-gradient(135deg, #5FD98A 0%, #4CAF50 100%);
+  background: linear-gradient(135deg, #5fd98a 0%, #4caf50 100%);
   color: white;
 }
 
 .btn-upgrade:hover:not(:disabled) {
-  background: linear-gradient(135deg, #70E99A 0%, #5DBF60 100%);
+  background: linear-gradient(135deg, #70e99a 0%, #5dbf60 100%);
   box-shadow: 0 4px 12px rgba(95, 217, 138, 0.4);
 }
 
 .btn-demolish {
   background: rgba(220, 53, 69, 0.2);
   border: 1px solid rgba(220, 53, 69, 0.4);
-  color: #FF6B7A;
+  color: #ff6b7a;
 }
 
 .btn-demolish:hover:not(:disabled) {
   background: rgba(220, 53, 69, 0.3);
-  border-color: #FF6B7A;
+  border-color: #ff6b7a;
 }
 
 .btn-action:disabled {
@@ -507,7 +532,7 @@ async function handleDemolish() {
 
 .build-menu h4 {
   margin: 0 0 12px 0;
-  color: #4A90E2;
+  color: #4a90e2;
   font-size: 18px;
 }
 
@@ -528,7 +553,7 @@ async function handleDemolish() {
 
 .building-option:hover:not(.disabled) {
   background: rgba(74, 144, 226, 0.2);
-  border-color: #4A90E2;
+  border-color: #4a90e2;
 }
 
 .building-option.disabled {
@@ -548,13 +573,13 @@ async function handleDemolish() {
 
 .option-info h5 {
   margin: 0 0 4px 0;
-  color: #4A90E2;
+  color: #4a90e2;
   font-size: 16px;
 }
 
 .option-info p {
   margin: 0;
-  color: #8FA3C1;
+  color: #8fa3c1;
   font-size: 12px;
 }
 
@@ -567,7 +592,7 @@ async function handleDemolish() {
 }
 
 .cost-label {
-  color: #8FA3C1;
+  color: #8fa3c1;
 }
 
 .cost-items {
@@ -576,7 +601,7 @@ async function handleDemolish() {
 }
 
 .cost-item {
-  color: #B0C4DE;
+  color: #b0c4de;
   display: flex;
   align-items: center;
   gap: 2px;
@@ -584,13 +609,13 @@ async function handleDemolish() {
 
 .option-time {
   font-size: 12px;
-  color: #8FA3C1;
+  color: #8fa3c1;
 }
 
 .no-buildings {
   text-align: center;
   padding: 20px;
-  color: #6B7B94;
+  color: #6b7b94;
   font-style: italic;
 }
 

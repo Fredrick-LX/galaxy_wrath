@@ -2,14 +2,14 @@
   <div class="universe-page">
     <!-- 宇宙画布 -->
     <UniverseCanvas />
-    
+
     <!-- 顶部工具栏 -->
     <div class="top-toolbar">
       <div class="game-title">
         <h1>星河之怒</h1>
         <span class="username">{{ userStore.user?.username }}</span>
       </div>
-      
+
       <div class="toolbar-actions">
         <button @click="handleLogout" class="btn-logout">
           <span class="icon">🚪</span>
@@ -17,7 +17,7 @@
         </button>
       </div>
     </div>
-    
+
     <!-- 资源显示 HUD -->
     <div class="resources-hud">
       <div class="resource-group primary">
@@ -37,7 +37,7 @@
           <span class="value">{{ formatNumber(resources.food) }}</span>
         </div>
       </div>
-      
+
       <div class="resource-group secondary">
         <div class="resource-item">
           <span class="icon">🔩</span>
@@ -56,7 +56,7 @@
         </div>
       </div>
     </div>
-    
+
     <!-- 行星列表 -->
     <div class="planets-panel">
       <h3>我的行星</h3>
@@ -75,19 +75,18 @@
         </div>
       </div>
     </div>
-    
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import { useUserStore } from '../stores/user';
-import { useUniverseStore } from '../stores/universe';
-import { useResourcesStore } from '../stores/resources';
-import UniverseCanvas from '../components/UniverseCanvas.vue';
-import { PLANET_TYPE_NAMES } from '../types/planet';
-import { getMyPlanets, claimOfflineRewards } from '../services/planet';
+import { ref, computed, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import { useUserStore } from "../stores/user";
+import { useUniverseStore } from "../stores/universe";
+import { useResourcesStore } from "../stores/resources";
+import UniverseCanvas from "../components/UniverseCanvas.vue";
+import { PLANET_TYPE_NAMES } from "../types/planet";
+import { getMyPlanets, claimOfflineRewards } from "../services/planet";
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -108,44 +107,48 @@ const loading = ref(true);
  */
 async function loadPlayerData() {
   loading.value = true;
-  
+
   try {
     // 获取行星列表
     const response = await getMyPlanets();
     if (response.success && response.planets) {
       myPlanets.value = response.planets;
-      
+
       // 更新资源状态
-      response.planets.forEach(planet => {
+      response.planets.forEach((planet) => {
         resourcesStore.setPlanetResources(planet.id, planet.resources);
       });
-      
+
       // 如果有离线时间，领取离线收益
       if (userStore.user) {
         const offlineResponse = await claimOfflineRewards();
         if (offlineResponse.success && offlineResponse.offlineTime) {
-          const hours = Math.floor(offlineResponse.offlineTime / (1000 * 60 * 60));
-          const minutes = Math.floor((offlineResponse.offlineTime % (1000 * 60 * 60)) / (1000 * 60));
-          
+          const hours = Math.floor(
+            offlineResponse.offlineTime / (1000 * 60 * 60)
+          );
+          const minutes = Math.floor(
+            (offlineResponse.offlineTime % (1000 * 60 * 60)) / (1000 * 60)
+          );
+
           if (hours > 0 || minutes > 0) {
             console.log(`🎁 离线收益已领取: ${hours}小时${minutes}分钟`);
-            
+
             // 更新行星资源
             if (offlineResponse.planets) {
               myPlanets.value = offlineResponse.planets;
-              offlineResponse.planets.forEach(planet => {
+              offlineResponse.planets.forEach((planet) => {
                 resourcesStore.setPlanetResources(planet.id, planet.resources);
               });
             }
           }
         }
       }
-      
+
       // 设置Socket监听
       resourcesStore.setupSocketListeners();
     }
   } catch (error) {
-    console.error('加载玩家数据失败:', error);
+    console.error("加载玩家数据失败:", error);
   } finally {
     loading.value = false;
   }
@@ -161,10 +164,10 @@ onMounted(() => {
  */
 function formatNumber(num: number): string {
   if (num >= 1000000) {
-    return (num / 1000000).toFixed(1) + 'M';
+    return (num / 1000000).toFixed(1) + "M";
   }
   if (num >= 1000) {
-    return (num / 1000).toFixed(1) + 'K';
+    return (num / 1000).toFixed(1) + "K";
   }
   return num.toFixed(0);
 }
@@ -188,7 +191,7 @@ function goToPlanet(planetId: string) {
  */
 function handleLogout() {
   userStore.logout();
-  router.push('/login');
+  router.push("/login");
 }
 </script>
 
@@ -207,7 +210,11 @@ function handleLogout() {
   left: 0;
   right: 0;
   height: 60px;
-  background: linear-gradient(180deg, rgba(20, 30, 50, 0.95) 0%, transparent 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(20, 30, 50, 0.95) 0%,
+    transparent 100%
+  );
   backdrop-filter: blur(10px);
   display: flex;
   justify-content: space-between;
@@ -224,14 +231,14 @@ function handleLogout() {
 
 .game-title h1 {
   font-size: 24px;
-  color: #4A90E2;
+  color: #4a90e2;
   margin: 0;
   text-shadow: 0 0 10px rgba(74, 144, 226, 0.5);
 }
 
 .game-title .username {
   font-size: 14px;
-  color: #8FA3C1;
+  color: #8fa3c1;
   padding: 4px 12px;
   background: rgba(74, 144, 226, 0.2);
   border-radius: 12px;
@@ -250,7 +257,7 @@ function handleLogout() {
   background: rgba(220, 53, 69, 0.2);
   border: 1px solid rgba(220, 53, 69, 0.4);
   border-radius: 6px;
-  color: #FF6B7A;
+  color: #ff6b7a;
   font-size: 14px;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -258,7 +265,7 @@ function handleLogout() {
 
 .btn-logout:hover {
   background: rgba(220, 53, 69, 0.3);
-  border-color: #FF6B7A;
+  border-color: #ff6b7a;
 }
 
 /* 资源显示 HUD */
@@ -299,14 +306,14 @@ function handleLogout() {
 }
 
 .resource-item .label {
-  color: #8FA3C1;
+  color: #8fa3c1;
   min-width: 60px;
 }
 
 .resource-item .value {
-  color: #4A90E2;
+  color: #4a90e2;
   font-weight: 600;
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
   margin-left: auto;
 }
 
@@ -328,7 +335,7 @@ function handleLogout() {
 .planets-panel h3 {
   margin: 0 0 12px 0;
   font-size: 16px;
-  color: #4A90E2;
+  color: #4a90e2;
 }
 
 .planets-list {
@@ -340,7 +347,7 @@ function handleLogout() {
 }
 
 .no-planets {
-  color: #6B7B94;
+  color: #6b7b94;
   font-size: 14px;
   text-align: center;
   padding: 20px;
@@ -360,18 +367,18 @@ function handleLogout() {
 
 .planet-item:hover {
   background: rgba(74, 144, 226, 0.2);
-  border-color: #4A90E2;
+  border-color: #4a90e2;
 }
 
 .planet-item .planet-type {
-  color: #4A90E2;
+  color: #4a90e2;
   font-weight: 600;
 }
 
 .planet-item .planet-id {
-  color: #8FA3C1;
+  color: #8fa3c1;
   font-size: 12px;
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
 }
 
 /* 滚动条样式 */

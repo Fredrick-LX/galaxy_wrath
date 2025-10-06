@@ -21,14 +21,14 @@ export const MAX_OFFLINE_HOURS = 24;  // 最大离线收益时长（小时）
 
 // 资源初始值
 export const INITIAL_RESOURCES = {
-  minerals: 500,
-  energy: 500,
-  food: 500,
-  alloys: 0,
-  powerCells: 0,
-  consumerGoods: 0,
-  techComponents: 0,
-  colonyShips: 0
+    minerals: 500,
+    energy: 500,
+    food: 500,
+    alloys: 0,
+    powerCells: 0,
+    consumerGoods: 0,
+    techComponents: 0,
+    colonyShips: 0
 };
 
 // 星系配置

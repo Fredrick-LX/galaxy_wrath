@@ -1,12 +1,12 @@
 <template>
   <div class="login-page">
     <StarBackground />
-    
+
     <div class="login-container">
       <div class="login-box">
         <h1 class="game-title">星河之怒</h1>
         <p class="game-subtitle">Galaxy Wrath</p>
-        
+
         <form @submit.prevent="handleLogin" class="login-form">
           <div class="form-group">
             <label for="email">邮箱</label>
@@ -18,7 +18,7 @@
               required
             />
           </div>
-          
+
           <div class="form-group">
             <label for="password">密码</label>
             <input
@@ -29,16 +29,16 @@
               required
             />
           </div>
-          
+
           <div v-if="errorMessage" class="error-message">
             {{ errorMessage }}
           </div>
-          
+
           <button type="submit" class="btn-primary" :disabled="loading">
-            {{ loading ? '登录中...' : '登录' }}
+            {{ loading ? "登录中..." : "登录" }}
           </button>
         </form>
-        
+
         <div class="login-links">
           <router-link to="/register" class="link">注册账号</router-link>
           <span class="separator">|</span>
@@ -50,45 +50,45 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
-import { useUserStore } from '../stores/user';
-import { login } from '../services/auth';
-import StarBackground from '../components/StarBackground.vue';
+import { ref } from "vue";
+import { useRouter } from "vue-router";
+import { useUserStore } from "../stores/user";
+import { login } from "../services/auth";
+import StarBackground from "../components/StarBackground.vue";
 
 const router = useRouter();
 const userStore = useUserStore();
 
 // 表单数据
 const formData = ref({
-  email: '',
-  password: ''
+  email: "",
+  password: "",
 });
 
 const loading = ref(false);
-const errorMessage = ref('');
+const errorMessage = ref("");
 
 /**
  * 处理登录
  */
 async function handleLogin() {
-  errorMessage.value = '';
+  errorMessage.value = "";
   loading.value = true;
-  
+
   try {
     const response = await login(formData.value);
-    
+
     if (response.success && response.token && response.user) {
       // 保存用户信息
       userStore.setUser(response.user, response.token);
-      
+
       // 跳转到宇宙界面
-      router.push('/universe');
+      router.push("/universe");
     } else {
       errorMessage.value = response.message;
     }
   } catch (error) {
-    errorMessage.value = '登录失败，请稍后重试';
+    errorMessage.value = "登录失败，请稍后重试";
   } finally {
     loading.value = false;
   }
@@ -123,7 +123,7 @@ async function handleLogin() {
 .game-title {
   font-size: 36px;
   font-weight: 700;
-  color: #4A90E2;
+  color: #4a90e2;
   text-align: center;
   margin-bottom: 8px;
   text-shadow: 0 0 20px rgba(74, 144, 226, 0.5);
@@ -131,7 +131,7 @@ async function handleLogin() {
 
 .game-subtitle {
   font-size: 16px;
-  color: #8FA3C1;
+  color: #8fa3c1;
   text-align: center;
   margin-bottom: 30px;
   letter-spacing: 2px;
@@ -151,7 +151,7 @@ async function handleLogin() {
 
 .form-group label {
   font-size: 14px;
-  color: #B0C4DE;
+  color: #b0c4de;
   font-weight: 500;
 }
 
@@ -160,19 +160,19 @@ async function handleLogin() {
   background: rgba(10, 20, 40, 0.6);
   border: 1px solid rgba(74, 144, 226, 0.3);
   border-radius: 6px;
-  color: #E0E6F0;
+  color: #e0e6f0;
   font-size: 14px;
   transition: all 0.3s ease;
 }
 
 .form-group input:focus {
   outline: none;
-  border-color: #4A90E2;
+  border-color: #4a90e2;
   box-shadow: 0 0 10px rgba(74, 144, 226, 0.3);
 }
 
 .form-group input::placeholder {
-  color: #6B7B94;
+  color: #6b7b94;
 }
 
 .error-message {
@@ -180,14 +180,14 @@ async function handleLogin() {
   background: rgba(220, 53, 69, 0.2);
   border: 1px solid rgba(220, 53, 69, 0.4);
   border-radius: 6px;
-  color: #FF6B7A;
+  color: #ff6b7a;
   font-size: 14px;
   text-align: center;
 }
 
 .btn-primary {
   padding: 14px;
-  background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
+  background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
   border: none;
   border-radius: 6px;
   color: white;
@@ -199,7 +199,7 @@ async function handleLogin() {
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, #5BA3F5 0%, #4A8BD0 100%);
+  background: linear-gradient(135deg, #5ba3f5 0%, #4a8bd0 100%);
   box-shadow: 0 4px 15px rgba(74, 144, 226, 0.4);
   transform: translateY(-2px);
 }
@@ -219,18 +219,18 @@ async function handleLogin() {
 }
 
 .login-links .link {
-  color: #4A90E2;
+  color: #4a90e2;
   text-decoration: none;
   font-size: 14px;
   transition: color 0.3s ease;
 }
 
 .login-links .link:hover {
-  color: #5BA3F5;
+  color: #5ba3f5;
   text-decoration: underline;
 }
 
 .login-links .separator {
-  color: #6B7B94;
+  color: #6b7b94;
 }
 </style>

@@ -4,24 +4,22 @@
       <h2>{{ planet.name || planet.id }}</h2>
       <div class="planet-meta">
         <span class="planet-type">{{ getPlanetTypeName(planet.type) }}</span>
-        <span class="planet-size">大小: {{ planet.size }}×{{ planet.size }}</span>
+        <span class="planet-size"
+          >大小: {{ planet.size }}×{{ planet.size }}</span
+        >
       </div>
     </div>
 
     <div class="planet-grid" :style="gridStyle">
-      <div
-        v-for="(row, y) in planet.zones"
-        :key="y"
-        class="grid-row"
-      >
+      <div v-for="(row, y) in planet.zones" :key="y" class="grid-row">
         <div
           v-for="(zone, x) in row"
           :key="`${y}-${x}`"
           class="grid-cell"
-          :class="{ 
+          :class="{
             'has-building': hasBuilding(x, y),
-            'selected': isSelected(x, y),
-            'can-build': canBuildHere(x, y)
+            selected: isSelected(x, y),
+            'can-build': canBuildHere(x, y),
           }"
           :style="{ backgroundColor: zone.color }"
           @click="handleCellClick(x, y)"
@@ -30,13 +28,13 @@
         >
           <!-- 区划类型标签 -->
           <div class="zone-label">{{ getZoneTypeName(zone.type) }}</div>
-          
+
           <!-- 建筑 -->
           <div v-if="hasBuilding(x, y)" class="building">
             <div class="building-icon">{{ getBuildingIcon(x, y) }}</div>
             <div class="building-level">Lv.{{ getBuildingLevel(x, y) }}</div>
           </div>
-          
+
           <!-- 建造中标识 -->
           <div v-if="isBuildingInProgress(x, y)" class="building-progress">
             <div class="progress-spinner"></div>
@@ -48,28 +46,36 @@
     <!-- 悬浮信息提示 -->
     <div v-if="hoveredCell" class="cell-tooltip" :style="tooltipStyle">
       <div class="tooltip-content">
-        <div class="tooltip-position">位置: ({{ hoveredCell.x }}, {{ hoveredCell.y }})</div>
+        <div class="tooltip-position">
+          位置: ({{ hoveredCell.x }}, {{ hoveredCell.y }})
+        </div>
         <div class="tooltip-zone">
-          区划: {{ getZoneTypeName(planet.zones[hoveredCell.y][hoveredCell.x].type) }}
+          区划:
+          {{ getZoneTypeName(planet.zones[hoveredCell.y][hoveredCell.x].type) }}
         </div>
-        <div v-if="hasBuilding(hoveredCell.x, hoveredCell.y)" class="tooltip-building">
-          <div class="building-name">{{ getBuildingName(hoveredCell.x, hoveredCell.y) }}</div>
-          <div class="building-info">{{ getBuildingInfo(hoveredCell.x, hoveredCell.y) }}</div>
+        <div
+          v-if="hasBuilding(hoveredCell.x, hoveredCell.y)"
+          class="tooltip-building"
+        >
+          <div class="building-name">
+            {{ getBuildingName(hoveredCell.x, hoveredCell.y) }}
+          </div>
+          <div class="building-info">
+            {{ getBuildingInfo(hoveredCell.x, hoveredCell.y) }}
+          </div>
         </div>
-        <div v-else class="tooltip-empty">
-          空地
-        </div>
+        <div v-else class="tooltip-empty">空地</div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import type { Planet } from '../types/planet';
-import { PLANET_TYPE_NAMES, ZONE_TYPE_NAMES } from '../types/planet';
-import { BUILDING_CONFIGS } from '../types/building';
-import { usePlanetStore } from '../stores/planet';
+import { ref, computed } from "vue";
+import type { Planet } from "../types/planet";
+import { PLANET_TYPE_NAMES, ZONE_TYPE_NAMES } from "../types/planet";
+import { BUILDING_CONFIGS } from "../types/building";
+import { usePlanetStore } from "../stores/planet";
 
 const props = defineProps<{
   planet: Planet;
@@ -85,15 +91,15 @@ const hoveredCell = ref<{ x: number; y: number } | null>(null);
 // 网格样式
 const gridStyle = computed(() => ({
   gridTemplateColumns: `repeat(${props.planet.size}, 1fr)`,
-  gridTemplateRows: `repeat(${props.planet.size}, 1fr)`
+  gridTemplateRows: `repeat(${props.planet.size}, 1fr)`,
 }));
 
 // 提示框样式
 const tooltipStyle = computed(() => {
   if (!hoveredCell.value) return {};
   return {
-    left: `${(hoveredCell.value.x + 1) * 100 / props.planet.size}%`,
-    top: `${(hoveredCell.value.y + 0.5) * 100 / props.planet.size}%`
+    left: `${((hoveredCell.value.x + 1) * 100) / props.planet.size}%`,
+    top: `${((hoveredCell.value.y + 0.5) * 100) / props.planet.size}%`,
   };
 });
 
@@ -122,7 +128,10 @@ function hasBuilding(x: number, y: number): boolean {
  * 检查位置是否被选中
  */
 function isSelected(x: number, y: number): boolean {
-  return planetStore.selectedPosition?.x === x && planetStore.selectedPosition?.y === y;
+  return (
+    planetStore.selectedPosition?.x === x &&
+    planetStore.selectedPosition?.y === y
+  );
 }
 
 /**
@@ -137,7 +146,7 @@ function canBuildHere(x: number, y: number): boolean {
  */
 function isBuildingInProgress(x: number, y: number): boolean {
   const building = planetStore.getBuildingAt(x, y);
-  return building?.status === 'building' || building?.status === 'upgrading';
+  return building?.status === "building" || building?.status === "upgrading";
 }
 
 /**
@@ -145,21 +154,21 @@ function isBuildingInProgress(x: number, y: number): boolean {
  */
 function getBuildingIcon(x: number, y: number): string {
   const building = planetStore.getBuildingAt(x, y);
-  if (!building) return '';
-  
+  if (!building) return "";
+
   const icons: Record<string, string> = {
-    miningDrill: '⛏️',
-    powerPlant: '⚡',
-    hydroponicFarm: '🌾',
-    refinery: '🏭',
-    transformer: '🔋',
-    foodProcessor: '🏪',
-    residentialBlock: '🏘️',
-    systemFortress: '🏰',
-    colonyShipyard: '🚀'
+    miningDrill: "⛏️",
+    powerPlant: "⚡",
+    hydroponicFarm: "🌾",
+    refinery: "🏭",
+    transformer: "🔋",
+    foodProcessor: "🏪",
+    residentialBlock: "🏘️",
+    systemFortress: "🏰",
+    colonyShipyard: "🚀",
   };
-  
-  return icons[building.type] || '🏗️';
+
+  return icons[building.type] || "🏗️";
 }
 
 /**
@@ -175,7 +184,7 @@ function getBuildingLevel(x: number, y: number): number {
  */
 function getBuildingName(x: number, y: number): string {
   const building = planetStore.getBuildingAt(x, y);
-  if (!building) return '';
+  if (!building) return "";
   return BUILDING_CONFIGS[building.type]?.name || building.type;
 }
 
@@ -184,15 +193,15 @@ function getBuildingName(x: number, y: number): string {
  */
 function getBuildingInfo(x: number, y: number): string {
   const building = planetStore.getBuildingAt(x, y);
-  if (!building) return '';
-  
-  if (building.status === 'building') {
-    return '建造中...';
+  if (!building) return "";
+
+  if (building.status === "building") {
+    return "建造中...";
   }
-  if (building.status === 'upgrading') {
-    return '升级中...';
+  if (building.status === "upgrading") {
+    return "升级中...";
   }
-  
+
   const bonus = planetStore.calculateAdjacencyBonus(building);
   return `等级 ${building.level} | 加成: +${(bonus * 100).toFixed(1)}%`;
 }
@@ -202,7 +211,7 @@ function getBuildingInfo(x: number, y: number): string {
  */
 function handleCellClick(x: number, y: number) {
   planetStore.selectPosition(x, y);
-  emit('cellClick', x, y);
+  emit("cellClick", x, y);
 }
 </script>
 
@@ -225,7 +234,7 @@ function handleCellClick(x: number, y: number) {
 
 .planet-info-header h2 {
   margin: 0 0 8px 0;
-  color: #4A90E2;
+  color: #4a90e2;
   font-size: 24px;
 }
 
@@ -236,12 +245,12 @@ function handleCellClick(x: number, y: number) {
 }
 
 .planet-type {
-  color: #5FD98A;
+  color: #5fd98a;
   font-weight: 600;
 }
 
 .planet-size {
-  color: #8FA3C1;
+  color: #8fa3c1;
 }
 
 .planet-grid {
@@ -282,7 +291,7 @@ function handleCellClick(x: number, y: number) {
 }
 
 .grid-cell.selected {
-  border: 2px solid #4A90E2;
+  border: 2px solid #4a90e2;
   box-shadow: 0 0 10px rgba(74, 144, 226, 0.5);
   z-index: 11;
 }
@@ -292,7 +301,7 @@ function handleCellClick(x: number, y: number) {
 }
 
 .grid-cell.can-build:not(.has-building):hover::after {
-  content: '+';
+  content: "+";
   position: absolute;
   font-size: 24px;
   color: rgba(255, 255, 255, 0.5);
@@ -330,7 +339,7 @@ function handleCellClick(x: number, y: number) {
   right: 2px;
   font-size: 10px;
   font-weight: 600;
-  color: #4A90E2;
+  color: #4a90e2;
   background: rgba(0, 0, 0, 0.7);
   padding: 1px 4px;
   border-radius: 4px;
@@ -347,13 +356,15 @@ function handleCellClick(x: number, y: number) {
   width: 20px;
   height: 20px;
   border: 3px solid rgba(74, 144, 226, 0.3);
-  border-top-color: #4A90E2;
+  border-top-color: #4a90e2;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .cell-tooltip {
@@ -375,7 +386,7 @@ function handleCellClick(x: number, y: number) {
 
 .tooltip-position,
 .tooltip-zone {
-  color: #8FA3C1;
+  color: #8fa3c1;
   margin-bottom: 4px;
 }
 
@@ -386,18 +397,18 @@ function handleCellClick(x: number, y: number) {
 }
 
 .building-name {
-  color: #4A90E2;
+  color: #4a90e2;
   font-weight: 600;
   margin-bottom: 4px;
 }
 
 .building-info {
-  color: #B0C4DE;
+  color: #b0c4de;
   font-size: 11px;
 }
 
 .tooltip-empty {
-  color: #6B7B94;
+  color: #6b7b94;
   font-style: italic;
 }
 </style>

@@ -1,6 +1,6 @@
 <template>
-  <canvas 
-    ref="canvasRef" 
+  <canvas
+    ref="canvasRef"
     class="star-background"
     :width="width"
     :height="height"
@@ -8,7 +8,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from "vue";
 
 // 星星接口
 interface Star {
@@ -21,13 +21,16 @@ interface Star {
 }
 
 // Props
-const props = withDefaults(defineProps<{
-  starCount?: number;
-  parallaxStrength?: number;
-}>(), {
-  starCount: 200,
-  parallaxStrength: 0.02
-});
+const props = withDefaults(
+  defineProps<{
+    starCount?: number;
+    parallaxStrength?: number;
+  }>(),
+  {
+    starCount: 200,
+    parallaxStrength: 0.02,
+  }
+);
 
 // 响应式变量
 const canvasRef = ref<HTMLCanvasElement | null>(null);
@@ -50,7 +53,7 @@ function initStars() {
       size: Math.random() * 2 + 0.5,
       speedX: (Math.random() - 0.5) * 0.2,
       speedY: (Math.random() - 0.5) * 0.2,
-      opacity: Math.random() * 0.5 + 0.3
+      opacity: Math.random() * 0.5 + 0.3,
     });
   }
 }
@@ -61,42 +64,38 @@ function initStars() {
 function drawStars() {
   const canvas = canvasRef.value;
   if (!canvas) return;
-  
-  const ctx = canvas.getContext('2d');
+
+  const ctx = canvas.getContext("2d");
   if (!ctx) return;
-  
+
   // 清空画布
   ctx.clearRect(0, 0, width.value, height.value);
-  
+
   // 绘制每颗星星
-  stars.value.forEach(star => {
+  stars.value.forEach((star) => {
     // 视差效果
-    const parallaxX = (mouseX.value - width.value / 2) * props.parallaxStrength * star.size;
-    const parallaxY = (mouseY.value - height.value / 2) * props.parallaxStrength * star.size;
-    
+    const parallaxX =
+      (mouseX.value - width.value / 2) * props.parallaxStrength * star.size;
+    const parallaxY =
+      (mouseY.value - height.value / 2) * props.parallaxStrength * star.size;
+
     // 更新位置
     star.x += star.speedX;
     star.y += star.speedY;
-    
+
     // 边界检查
     if (star.x < 0) star.x = width.value;
     if (star.x > width.value) star.x = 0;
     if (star.y < 0) star.y = height.value;
     if (star.y > height.value) star.y = 0;
-    
+
     // 绘制星星
     ctx.beginPath();
-    ctx.arc(
-      star.x + parallaxX,
-      star.y + parallaxY,
-      star.size,
-      0,
-      Math.PI * 2
-    );
+    ctx.arc(star.x + parallaxX, star.y + parallaxY, star.size, 0, Math.PI * 2);
     ctx.fillStyle = `rgba(200, 220, 255, ${star.opacity})`;
     ctx.fill();
   });
-  
+
   // 继续动画
   animationId = requestAnimationFrame(drawStars);
 }
@@ -122,17 +121,17 @@ function handleMouseMove(event: MouseEvent) {
 onMounted(() => {
   initStars();
   drawStars();
-  
-  window.addEventListener('resize', handleResize);
-  window.addEventListener('mousemove', handleMouseMove);
+
+  window.addEventListener("resize", handleResize);
+  window.addEventListener("mousemove", handleMouseMove);
 });
 
 onBeforeUnmount(() => {
   if (animationId) {
     cancelAnimationFrame(animationId);
   }
-  window.removeEventListener('resize', handleResize);
-  window.removeEventListener('mousemove', handleMouseMove);
+  window.removeEventListener("resize", handleResize);
+  window.removeEventListener("mousemove", handleMouseMove);
 });
 </script>
 

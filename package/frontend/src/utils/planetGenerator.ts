@@ -6,146 +6,146 @@ import seedrandom from 'seedrandom';
 import type { Planet, PlanetType, Zone, ZoneType } from '../types/planet';
 import { ZONE_COLORS } from '../types/planet';
 import { INITIAL_RESOURCES } from '../types/resource';
-import type { NoiseGenerator } from './noiseGenerator';
+import type { INoiseGenerator } from './noiseGenerator';
 import type { GalaxyConfig } from './galaxyGenerator';
 
 /**
  * 根据行星类型和噪声值生成区划分布
  */
 function generateZones(
-  planetType: PlanetType,
-  size: number,
-  seed: number,
-  noiseGenerator: NoiseGenerator
+    planetType: PlanetType,
+    size: number,
+    seed: number,
+    noiseGenerator: INoiseGenerator
 ): Zone[][] {
-  const rng = seedrandom(seed.toString());
-  const zones: Zone[][] = [];
+    const rng = seedrandom(seed.toString());
+    const zones: Zone[][] = [];
 
-  // 根据行星类型设置区划概率
-  const zoneProbabilities = getZoneProbabilities(planetType);
+    // 根据行星类型设置区划概率
+    const zoneProbabilities = getZoneProbabilities(planetType);
 
-  for (let y = 0; y < size; y++) {
-    const row: Zone[] = [];
-    for (let x = 0; x < size; x++) {
-      // 使用噪声和随机数决定区划类型
-      const noiseValue = noiseGenerator.getNormalized2D(
-        seed + x * 100,
-        seed + y * 100,
-        0.3
-      );
-      const randomValue = rng();
-      const combinedValue = (noiseValue + randomValue) / 2;
+    for (let y = 0; y < size; y++) {
+        const row: Zone[] = [];
+        for (let x = 0; x < size; x++) {
+            // 使用噪声和随机数决定区划类型
+            const noiseValue = noiseGenerator.getNormalized2D(
+                seed + x * 100,
+                seed + y * 100,
+                0.3
+            );
+            const randomValue = rng();
+            const combinedValue = (noiseValue + randomValue) / 2;
 
-      const zoneType = selectZoneType(combinedValue, zoneProbabilities);
-      row.push({
-        type: zoneType,
-        color: ZONE_COLORS[zoneType]
-      });
+            const zoneType = selectZoneType(combinedValue, zoneProbabilities);
+            row.push({
+                type: zoneType,
+                color: ZONE_COLORS[zoneType]
+            });
+        }
+        zones.push(row);
     }
-    zones.push(row);
-  }
 
-  return zones;
+    return zones;
 }
 
 /**
  * 根据行星类型获取区划概率分布
  */
 function getZoneProbabilities(planetType: PlanetType): Record<ZoneType, number> {
-  switch (planetType) {
-    case 'mountain':
-      return {
-        mining: 0.5,
-        power: 0.2,
-        agricultural: 0.1,
-        wasteland: 0.2
-      };
-    case 'swamp':
-      return {
-        mining: 0.2,
-        power: 0.2,
-        agricultural: 0.3,
-        wasteland: 0.3
-      };
-    case 'frozen':
-      return {
-        mining: 0.3,
-        power: 0.3,
-        agricultural: 0.1,
-        wasteland: 0.3
-      };
-    case 'lava':
-      return {
-        mining: 0.50,
-        power: 0.20,
-        agricultural: 0.05,
-        wasteland: 0.25
-      };
-    case 'arid':
-      return {
-        mining: 0.35,
-        power: 0.25,
-        agricultural: 0.15,
-        wasteland: 0.25
-      };
-    case 'tropical':
-      return {
-        mining: 0.15,
-        power: 0.20,
-        agricultural: 0.40,
-        wasteland: 0.25
-      };
-    case 'tundra':
-      return {
-        mining: 0.25,
-        power: 0.3,
-        agricultural: 0.15,
-        wasteland: 0.3
-      };
-    default:
-      return {
-        mining: 0.25,
-        power: 0.25,
-        agricultural: 0.25,
-        wasteland: 0.25
-      };
-  }
+    switch (planetType) {
+        case 'mountain':
+            return {
+                mining: 0.5,
+                power: 0.2,
+                agricultural: 0.1,
+                wasteland: 0.2
+            };
+        case 'swamp':
+            return {
+                mining: 0.2,
+                power: 0.2,
+                agricultural: 0.3,
+                wasteland: 0.3
+            };
+        case 'frozen':
+            return {
+                mining: 0.3,
+                power: 0.3,
+                agricultural: 0.1,
+                wasteland: 0.3
+            };
+        case 'lava':
+            return {
+                mining: 0.50,
+                power: 0.20,
+                agricultural: 0.05,
+                wasteland: 0.25
+            };
+        case 'arid':
+            return {
+                mining: 0.35,
+                power: 0.25,
+                agricultural: 0.15,
+                wasteland: 0.25
+            };
+        case 'tropical':
+            return {
+                mining: 0.15,
+                power: 0.20,
+                agricultural: 0.40,
+                wasteland: 0.25
+            };
+        case 'tundra':
+            return {
+                mining: 0.25,
+                power: 0.3,
+                agricultural: 0.15,
+                wasteland: 0.3
+            };
+        default:
+            return {
+                mining: 0.25,
+                power: 0.25,
+                agricultural: 0.25,
+                wasteland: 0.25
+            };
+    }
 }
 
 /**
  * 根据值和概率分布选择区划类型
  */
 function selectZoneType(
-  value: number,
-  probabilities: Record<ZoneType, number>
+    value: number,
+    probabilities: Record<ZoneType, number>
 ): ZoneType {
-  let cumulative = 0;
-  const types: ZoneType[] = ['mining', 'power', 'agricultural', 'wasteland'];
+    let cumulative = 0;
+    const types: ZoneType[] = ['mining', 'power', 'agricultural', 'wasteland'];
 
-  for (const type of types) {
-    cumulative += probabilities[type];
-    if (value <= cumulative) {
-      return type;
+    for (const type of types) {
+        cumulative += probabilities[type];
+        if (value <= cumulative) {
+            return type;
+        }
     }
-  }
 
-  return 'wasteland'; // 默认
+    return 'wasteland'; // 默认
 }
 
 /**
  * 根据噪声值选择行星类型
  */
 function selectPlanetType(noiseValue: number, rng: () => number): PlanetType {
-  // 使用噪声值和随机数组合
-  const combinedValue = (noiseValue + rng()) / 2;
+    // 使用噪声值和随机数组合
+    const combinedValue = (noiseValue + rng()) / 2;
 
-  if (combinedValue < 0.14) return 'mountain';
-  if (combinedValue < 0.28) return 'swamp';
-  if (combinedValue < 0.42) return 'frozen';
-  if (combinedValue < 0.56) return 'lava';
-  if (combinedValue < 0.70) return 'arid';
-  if (combinedValue < 0.84) return 'tropical';
-  return 'tundra';
+    if (combinedValue < 0.14) return 'mountain';
+    if (combinedValue < 0.28) return 'swamp';
+    if (combinedValue < 0.42) return 'frozen';
+    if (combinedValue < 0.56) return 'lava';
+    if (combinedValue < 0.70) return 'arid';
+    if (combinedValue < 0.84) return 'tropical';
+    return 'tundra';
 }
 
 /**
@@ -158,61 +158,61 @@ function selectPlanetType(noiseValue: number, rng: () => number): PlanetType {
  * @returns 行星对象
  */
 export function generatePlanet(
-  galaxyId: string,
-  position: number,
-  seed: number,
-  config: GalaxyConfig,
-  noiseGenerator: NoiseGenerator
+    galaxyId: string,
+    position: number,
+    seed: number,
+    config: GalaxyConfig,
+    noiseGenerator: INoiseGenerator
 ): Planet {
-  const rng = seedrandom(seed.toString());
-  const planetId = `${galaxyId}_${position}`;
+    const rng = seedrandom(seed.toString());
+    const planetId = `${galaxyId}_${position}`;
 
-  // 使用噪声决定行星类型
-  const noiseValue = noiseGenerator.getNormalized2D(seed, seed + 1000, 0.05);
-  const planetType = selectPlanetType(noiseValue, rng);
+    // 使用噪声决定行星类型
+    const noiseValue = noiseGenerator.getNormalized2D(seed, seed + 1000, 0.05);
+    const planetType = selectPlanetType(noiseValue, rng);
 
-  // 随机生成行星大小
-  const size = Math.floor(
-    rng() * (config.maxPlanetSize - config.minPlanetSize + 1) + config.minPlanetSize
-  );
+    // 随机生成行星大小
+    const size = Math.floor(
+        rng() * (config.maxPlanetSize - config.minPlanetSize + 1) + config.minPlanetSize
+    );
 
-  // 生成区划
-  const zones = generateZones(planetType, size, seed, noiseGenerator);
+    // 生成区划
+    const zones = generateZones(planetType, size, seed, noiseGenerator);
 
-  return {
-    id: planetId,
-    galaxyId,
-    position,
-    type: planetType,
-    size,
-    ownerId: null,
-    zones,
-    buildings: [],
-    resources: { ...INITIAL_RESOURCES }
-  };
+    return {
+        id: planetId,
+        galaxyId,
+        position,
+        type: planetType,
+        size,
+        ownerId: null,
+        zones,
+        buildings: [],
+        resources: { ...INITIAL_RESOURCES }
+    };
 }
 
 /**
  * 生成行星名称（基于星系ID和种子）
  */
 export function generatePlanetName(
-  galaxyId: string,
-  seed: number
+    galaxyId: string,
+    seed: number
 ): string {
-  const rng = seedrandom(seed.toString());
-  
-  // 希腊字母
-  const greekLetters = [
-    'Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon', 'Zeta', 'Eta', 'Theta',
-    'Iota', 'Kappa', 'Lambda', 'Mu', 'Nu', 'Xi', 'Omicron', 'Pi',
-    'Rho', 'Sigma', 'Tau', 'Upsilon', 'Phi', 'Chi', 'Psi', 'Omega'
-  ];
-  
-  // 随机数字
-  const number = Math.floor(rng() * 9999);
-  
-  // 选择希腊字母
-  const letter = greekLetters[Math.floor(rng() * greekLetters.length)];
-  
-  return `${galaxyId}-${letter}-${number}`;
+    const rng = seedrandom(seed.toString());
+
+    // 希腊字母
+    const greekLetters = [
+        'Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon', 'Zeta', 'Eta', 'Theta',
+        'Iota', 'Kappa', 'Lambda', 'Mu', 'Nu', 'Xi', 'Omicron', 'Pi',
+        'Rho', 'Sigma', 'Tau', 'Upsilon', 'Phi', 'Chi', 'Psi', 'Omega'
+    ];
+
+    // 随机数字
+    const number = Math.floor(rng() * 9999);
+
+    // 选择希腊字母
+    const letter = greekLetters[Math.floor(rng() * greekLetters.length)];
+
+    return `${galaxyId}-${letter}-${number}`;
 }

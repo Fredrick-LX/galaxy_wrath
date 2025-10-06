@@ -1,30 +1,32 @@
 <template>
   <div ref="containerRef" class="universe-canvas">
     <canvas ref="canvasRef"></canvas>
-    
+
     <!-- HUD 信息 -->
     <div class="universe-hud">
       <div class="hud-section coordinates">
         <span class="label">坐标:</span>
-        <span class="value">X: {{ Math.round(viewportX) }}, Y: {{ Math.round(viewportY) }}</span>
+        <span class="value"
+          >X: {{ Math.round(viewportX) }}, Y: {{ Math.round(viewportY) }}</span
+        >
       </div>
-      
+
       <div class="hud-section zoom">
         <span class="label">缩放:</span>
         <span class="value">{{ (zoom * 100).toFixed(0) }}%</span>
       </div>
-      
+
       <div class="hud-section galaxies">
         <span class="label">已加载星系:</span>
         <span class="value">{{ loadedGalaxies }}</span>
       </div>
-      
+
       <div class="hud-section fps">
         <span class="label">FPS:</span>
         <span class="value">{{ fps }}</span>
       </div>
     </div>
-    
+
     <!-- 控制说明 -->
     <div class="controls-hint">
       <p>拖动: 移动视图</p>
@@ -35,11 +37,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
-import * as PIXI from 'pixi.js';
-import { Viewport } from 'pixi-viewport';
-import { useUniverseStore } from '../stores/universe';
-import type { Galaxy } from '../types/galaxy';
+import { ref, onMounted, onBeforeUnmount, watch } from "vue";
+import * as PIXI from "pixi.js";
+import { Viewport } from "pixi-viewport";
+import { useUniverseStore } from "../stores/universe";
+import type { Galaxy } from "../types/galaxy";
 
 const universeStore = useUniverseStore();
 
@@ -76,7 +78,7 @@ async function initPixi() {
     backgroundColor: 0x0a0e27,
     antialias: true,
     resolution: window.devicePixelRatio || 1,
-    autoDensity: true
+    autoDensity: true,
   });
 
   // 创建视口
@@ -85,7 +87,7 @@ async function initPixi() {
     screenHeight: height,
     worldWidth: 100000,
     worldHeight: 100000,
-    events: app.renderer.events
+    events: app.renderer.events,
   });
 
   app.stage.addChild(viewport);
@@ -94,19 +96,19 @@ async function initPixi() {
   viewport
     .drag()
     .pinch()
-    .wheel({ 
+    .wheel({
       smooth: 3,
-      percent: 0.1
+      percent: 0.1,
     })
     .decelerate()
-    .clamp({ direction: 'all' })
+    .clamp({ direction: "all" })
     .clampZoom({
       minScale: 0.5,
-      maxScale: 1.5
+      maxScale: 1.5,
     });
 
   // 监听视口移动
-  viewport.on('moved', updateViewportInfo);
+  viewport.on("moved", updateViewportInfo);
 
   // 初始化宇宙
   universeStore.initUniverse();
@@ -115,7 +117,7 @@ async function initPixi() {
   // 开始渲染循环
   app.ticker.add(renderLoop);
 
-  console.log('✅ Pixi.js 初始化完成');
+  console.log("✅ Pixi.js 初始化完成");
 }
 
 /**
@@ -140,7 +142,7 @@ const RENDER_THROTTLE = 100; // 限制渲染频率为10次/秒
  */
 function renderLoop() {
   const currentTime = performance.now();
-  
+
   // 计算FPS
   frameCount++;
   if (currentTime - lastTime >= 1000) {
@@ -154,7 +156,7 @@ function renderLoop() {
     renderVisibleGalaxies();
     lastRenderTime = currentTime;
   }
-  
+
   // 定期清理远距离星系（降低频率）
   if (frameCount % 600 === 0) {
     universeStore.cleanupDistantGalaxies();
@@ -171,7 +173,7 @@ function renderVisibleGalaxies() {
   loadedGalaxies.value = universeStore.galaxies.length;
 
   // 移除不再可见的星系图形
-  const visibleIds = new Set(visibleGalaxies.map(g => g.id));
+  const visibleIds = new Set(visibleGalaxies.map((g) => g.id));
   galaxyGraphics.forEach((graphics, id) => {
     if (!visibleIds.has(id)) {
       viewport!.removeChild(graphics);
@@ -181,7 +183,7 @@ function renderVisibleGalaxies() {
   });
 
   // 渲染可见星系
-  visibleGalaxies.forEach(galaxy => {
+  visibleGalaxies.forEach((galaxy) => {
     if (!galaxyGraphics.has(galaxy.id)) {
       const graphics = renderGalaxy(galaxy);
       viewport!.addChild(graphics);
@@ -211,8 +213,8 @@ function renderGalaxy(galaxy: Galaxy): PIXI.Container {
     universeStore.config.galaxySize,
     universeStore.config.galaxySize
   );
-  graphics.stroke({ width: 4, color: 0x4A90E2, alpha: 0.5 });
-  
+  graphics.stroke({ width: 4, color: 0x4a90e2, alpha: 0.5 });
+
   // 绘制星系背景（略微发光）
   graphics.rect(
     -universeStore.config.galaxySize / 2,
@@ -224,13 +226,13 @@ function renderGalaxy(galaxy: Galaxy): PIXI.Container {
 
   // 行星颜色映射（预定义避免重复创建）
   const colors: Record<string, number> = {
-    mountain: 0x8B7355,
-    swamp: 0x5F7F5F,
-    frozen: 0xA0D8EF,
-    lava: 0xFF4500,
-    arid: 0xD2B48C,
-    tropical: 0x228B22,
-    tundra: 0xB0C4DE
+    mountain: 0x8b7355,
+    swamp: 0x5f7f5f,
+    frozen: 0xa0d8ef,
+    lava: 0xff4500,
+    arid: 0xd2b48c,
+    tropical: 0x228b22,
+    tundra: 0xb0c4de,
   };
 
   // 批量绘制行星
@@ -239,28 +241,30 @@ function renderGalaxy(galaxy: Galaxy): PIXI.Container {
 
     const row = Math.floor(index / gridSize);
     const col = index % gridSize;
-    const x = col * cellSize - universeStore.config.galaxySize / 2 + cellSize / 2;
-    const y = row * cellSize - universeStore.config.galaxySize / 2 + cellSize / 2;
+    const x =
+      col * cellSize - universeStore.config.galaxySize / 2 + cellSize / 2;
+    const y =
+      row * cellSize - universeStore.config.galaxySize / 2 + cellSize / 2;
     const radius = planet.size * 3;
-    
+
     // 绘制行星光晕（外层）
     graphics.circle(x, y, radius + 4);
-    graphics.fill({ color: colors[planet.type] || 0x8FA3C1, alpha: 0.3 });
-    
+    graphics.fill({ color: colors[planet.type] || 0x8fa3c1, alpha: 0.3 });
+
     // 绘制行星主体
     graphics.circle(x, y, radius);
-    graphics.fill({ color: colors[planet.type] || 0x8FA3C1 });
-    
+    graphics.fill({ color: colors[planet.type] || 0x8fa3c1 });
+
     // 添加高光效果
     graphics.circle(x - radius * 0.3, y - radius * 0.3, radius * 0.4);
-    graphics.fill({ color: 0xFFFFFF, alpha: 0.3 });
-    
+    graphics.fill({ color: 0xffffff, alpha: 0.3 });
+
     // 如果行星被占领，添加闪烁边框
     if (planet.ownerId) {
       graphics.circle(x, y, radius + 2);
-      graphics.stroke({ width: 3, color: 0x4A90E2, alpha: 0.8 });
+      graphics.stroke({ width: 3, color: 0x4a90e2, alpha: 0.8 });
       graphics.circle(x, y, radius + 4);
-      graphics.stroke({ width: 1, color: 0x4A90E2, alpha: 0.4 });
+      graphics.stroke({ width: 1, color: 0x4a90e2, alpha: 0.4 });
     }
   });
 
@@ -272,19 +276,21 @@ function renderGalaxy(galaxy: Galaxy): PIXI.Container {
 
     const row = Math.floor(index / gridSize);
     const col = index % gridSize;
-    const x = col * cellSize - universeStore.config.galaxySize / 2 + cellSize / 2;
-    const y = row * cellSize - universeStore.config.galaxySize / 2 + cellSize / 2;
+    const x =
+      col * cellSize - universeStore.config.galaxySize / 2 + cellSize / 2;
+    const y =
+      row * cellSize - universeStore.config.galaxySize / 2 + cellSize / 2;
     const radius = planet.size * 3;
 
     // 创建透明的交互区域
     const hitArea = new PIXI.Graphics();
     hitArea.circle(x, y, radius + 5);
     hitArea.fill({ color: 0x000000, alpha: 0.01 });
-    hitArea.eventMode = 'static';
-    hitArea.cursor = 'pointer';
-    hitArea.on('pointerdown', (event) => {
+    hitArea.eventMode = "static";
+    hitArea.cursor = "pointer";
+    hitArea.on("pointerdown", (event) => {
       event.stopPropagation();
-      console.log('点击行星:', planet.id, planet.name);
+      console.log("点击行星:", planet.id, planet.name);
       // TODO: 跳转到行星详情页
     });
 
@@ -296,10 +302,10 @@ function renderGalaxy(galaxy: Galaxy): PIXI.Container {
         text: planet.name,
         style: {
           fontSize: 12,
-          fill: planet.ownerId ? 0x4A90E2 : 0x8FA3C1,
-          align: 'center',
-          fontWeight: planet.ownerId ? 'bold' : 'normal'
-        }
+          fill: planet.ownerId ? 0x4a90e2 : 0x8fa3c1,
+          align: "center",
+          fontWeight: planet.ownerId ? "bold" : "normal",
+        },
       });
       nameText.anchor.set(0.5);
       nameText.x = x;
@@ -314,9 +320,9 @@ function renderGalaxy(galaxy: Galaxy): PIXI.Container {
       text: galaxy.id,
       style: {
         fontSize: 20,
-        fill: 0x8FA3C1,
-        align: 'center'
-      }
+        fill: 0x8fa3c1,
+        align: "center",
+      },
     });
     text.anchor.set(0.5);
     text.y = -universeStore.config.galaxySize / 2 - 30;
@@ -343,24 +349,28 @@ function handleResize() {
 // 生命周期
 onMounted(() => {
   initPixi();
-  window.addEventListener('resize', handleResize);
+  window.addEventListener("resize", handleResize);
 });
 
 onBeforeUnmount(() => {
-  window.removeEventListener('resize', handleResize);
-  
+  window.removeEventListener("resize", handleResize);
+
   if (app) {
     app.destroy(true, { children: true });
   }
-  
-  galaxyGraphics.forEach(graphics => graphics.destroy());
+
+  galaxyGraphics.forEach((graphics) => graphics.destroy());
   galaxyGraphics.clear();
 });
 
 // 监听可见星系变化
-watch(() => universeStore.visibleGalaxies, () => {
-  renderVisibleGalaxies();
-}, { deep: true });
+watch(
+  () => universeStore.visibleGalaxies,
+  () => {
+    renderVisibleGalaxies();
+  },
+  { deep: true }
+);
 </script>
 
 <style scoped>
@@ -401,14 +411,14 @@ canvas {
 }
 
 .hud-section .label {
-  color: #8FA3C1;
+  color: #8fa3c1;
   font-weight: 500;
 }
 
 .hud-section .value {
-  color: #4A90E2;
+  color: #4a90e2;
   font-weight: 600;
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
 }
 
 .controls-hint {
@@ -421,7 +431,7 @@ canvas {
   border-radius: 8px;
   padding: 16px;
   font-size: 12px;
-  color: #8FA3C1;
+  color: #8fa3c1;
 }
 
 .controls-hint p {

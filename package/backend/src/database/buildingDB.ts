@@ -10,8 +10,8 @@ import type { Building } from '../types';
  */
 
 export interface BuildingOperation {
-  planetId: string;
-  building: Building;
+    planetId: string;
+    building: Building;
 }
 
 // 建筑操作将通过行星数据进行
