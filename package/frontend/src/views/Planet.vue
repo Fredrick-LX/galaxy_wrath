@@ -24,11 +24,32 @@
     <div class="planet-content">
       <!-- 行星网格 -->
       <div class="grid-section">
+        <!-- 未占领行星提示 -->
+        <div v-if="currentPlanet && !isPlanetOwned" class="unowned-planet-info">
+          <div class="info-card">
+            <h2>🌍 未占领的行星</h2>
+            <div class="planet-basic-info">
+              <p><strong>行星ID:</strong> {{ currentPlanet.id }}</p>
+              <p><strong>星系:</strong> {{ currentPlanet.galaxyId }}</p>
+              <p><strong>位置:</strong> {{ currentPlanet.position }}</p>
+              <p><strong>类型:</strong> {{ currentPlanet.type }}</p>
+              <p><strong>大小:</strong> {{ currentPlanet.size }}x{{ currentPlanet.size }}</p>
+            </div>
+            <div class="action-hint">
+              <p>💡 该行星尚未被占领</p>
+              <p>未来版本将支持殖民新行星功能</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 已拥有行星的网格 -->
         <PlanetGrid
-          v-if="currentPlanet"
+          v-else-if="currentPlanet && isPlanetOwned"
           :planet="currentPlanet"
           @cell-click="handleCellClick"
         />
+        
+        <!-- 加载中 -->
         <div v-else class="loading">
           <div class="spinner"></div>
           <p>加载中...</p>
@@ -156,6 +177,7 @@ const resourcesStore = useResourcesStore();
 const planetId = computed(() => route.params.id as string);
 const showBuildingPanel = ref(false);
 const showProductionPanel = ref(false);
+const isPlanetOwned = ref(false); // 行星是否属于玩家
 
 // 当前行星
 const currentPlanet = computed(() => planetStore.currentPlanet);
@@ -183,36 +205,52 @@ const buildingInProgress = computed(
  * 加载行星数据
  */
 async function loadPlanet() {
-  const response = await getPlanetById(planetId.value);
+  try {
+    const response: any = await getPlanetById(planetId.value);
 
-  if (response.success && response.planet) {
-    planetStore.setCurrentPlanet(response.planet);
-    resourcesStore.setPlanetResources(
-      response.planet.id,
-      response.planet.resources
-    );
+    if (response.success && response.planet) {
+      planetStore.setCurrentPlanet(response.planet);
+      isPlanetOwned.value = response.owned !== false; // 默认为true（向后兼容）
 
-    // 订阅行星更新
-    subscribePlanet(planetId.value);
+      if (isPlanetOwned.value) {
+        // 玩家拥有的行星，加载完整功能
+        resourcesStore.setPlanetResources(
+          response.planet.id,
+          response.planet.resources
+        );
 
-    // 监听Socket更新
-    const socket = getSocket();
-    if (socket) {
-      socket.on("planet:update", (data: any) => {
-        if (data.planetId === planetId.value && currentPlanet.value) {
-          // 更新资源
-          currentPlanet.value.resources = data.resources;
-          resourcesStore.setPlanetResources(data.planetId, data.resources);
+        // 订阅行星更新
+        subscribePlanet(planetId.value);
 
-          // 更新建筑状态
-          if (data.buildings) {
-            currentPlanet.value.buildings = data.buildings;
-          }
+        // 监听Socket更新
+        const socket = getSocket();
+        if (socket) {
+          socket.on("planet:update", (data: any) => {
+            if (data.planetId === planetId.value && currentPlanet.value) {
+              // 更新资源
+              currentPlanet.value.resources = data.resources;
+              resourcesStore.setPlanetResources(data.planetId, data.resources);
+
+              // 更新建筑状态
+              if (data.buildings) {
+                currentPlanet.value.buildings = data.buildings;
+              }
+            }
+          });
         }
-      });
+      } else {
+        // 未占领的行星，仅显示基础信息
+        console.log("查看未占领的行星:", response.planet);
+      }
+    } else {
+      // 行星不存在
+      console.warn("行星不存在:", response.message);
+      alert(`无法访问该行星：${response.message || '行星不存在'}`);
+      router.push("/universe");
     }
-  } else {
-    console.error("加载行星失败:", response.message);
+  } catch (error) {
+    console.error("加载行星出错:", error);
+    alert("加载行星数据失败，请重试");
     router.push("/universe");
   }
 }
@@ -584,5 +622,70 @@ watch(
 
 .sidebar::-webkit-scrollbar-thumb:hover {
   background: rgba(74, 144, 226, 0.6);
+}
+
+/* 未占领行星信息样式 */
+.unowned-planet-info {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 40px;
+}
+
+.unowned-planet-info .info-card {
+  background: linear-gradient(135deg, rgba(20, 30, 50, 0.9) 0%, rgba(30, 40, 60, 0.9) 100%);
+  border: 2px solid rgba(74, 144, 226, 0.5);
+  border-radius: 16px;
+  padding: 40px;
+  max-width: 600px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  text-align: center;
+}
+
+.unowned-planet-info h2 {
+  color: #4a90e2;
+  margin-bottom: 30px;
+  font-size: 28px;
+}
+
+.unowned-planet-info .planet-basic-info {
+  background: rgba(10, 20, 40, 0.6);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.unowned-planet-info .planet-basic-info p {
+  color: #b0c4de;
+  font-size: 16px;
+  margin: 12px 0;
+  line-height: 1.6;
+}
+
+.unowned-planet-info .planet-basic-info strong {
+  color: #8fa3c1;
+  margin-right: 8px;
+}
+
+.unowned-planet-info .action-hint {
+  background: rgba(74, 144, 226, 0.1);
+  border: 1px solid rgba(74, 144, 226, 0.3);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.unowned-planet-info .action-hint p {
+  color: #8fa3c1;
+  margin: 8px 0;
+  font-size: 15px;
+}
+
+.unowned-planet-info .action-hint p:first-child {
+  color: #4a90e2;
+  font-weight: 600;
+  font-size: 16px;
 }
 </style>

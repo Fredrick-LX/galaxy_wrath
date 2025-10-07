@@ -245,7 +245,7 @@ export class SocketEventsHandler {
                     const userId = socket.data.userId;
                     const { planetId } = data;
 
-                    // 先从生产引擎获取（获取最新状态）
+                    // 先从生产引擎获取（玩家拥有的行星）
                     let planet = productionEngine.getPlanet(planetId);
 
                     // 如果生产引擎没有，从数据库获取
@@ -254,26 +254,60 @@ export class SocketEventsHandler {
                         planet = gameSave?.planets.find(p => p.id === planetId);
                     }
 
-                    if (!planet) {
+                    // 如果玩家拥有该行星，检查权限并返回完整数据
+                    if (planet) {
+                        if (planet.ownerId !== userId) {
+                            callback({
+                                success: false,
+                                message: '无权访问此行星'
+                            });
+                            return;
+                        }
+
                         callback({
-                            success: false,
-                            message: '行星不存在'
+                            success: true,
+                            planet,
+                            owned: true
                         });
                         return;
                     }
 
-                    // 检查权限
-                    if (planet.ownerId !== userId) {
+                    // 行星不属于玩家，尝试生成基础信息
+                    const [galaxyId, positionStr] = planetId.split('_');
+                    const position = parseInt(positionStr);
+
+                    if (!galaxyId || isNaN(position)) {
                         callback({
                             success: false,
-                            message: '无权访问此行星'
+                            message: '无效的行星ID'
                         });
                         return;
                     }
 
+                    // 获取该位置的行星基础信息
+                    const planetInfo = getPlanetAtPosition(galaxyId, position);
+
+                    if (!planetInfo) {
+                        callback({
+                            success: false,
+                            message: '该位置没有行星'
+                        });
+                        return;
+                    }
+
+                    // 返回未占领行星的基础信息
                     callback({
                         success: true,
-                        planet
+                        planet: {
+                            id: planetId,
+                            galaxyId,
+                            position,
+                            type: planetInfo.type,
+                            size: planetInfo.size,
+                            ownerId: null,
+                            name: `${galaxyId}-${position}`
+                        },
+                        owned: false
                     });
                 } catch (error) {
                     console.error('获取行星详情失败:', error);
@@ -467,6 +501,63 @@ export class SocketEventsHandler {
             });
 
             // ============ 宇宙相关事件 ============
+
+            // 获取视口范围内的星系数据
+            socket.on('universe:get-galaxies', async (data: { startX: number; startY: number; endX: number; endY: number }, callback) => {
+                if (!this.requireAuth(socket, callback)) return;
+
+                try {
+                    const { startX, startY, endX, endY } = data;
+
+                    if (startX === undefined || startY === undefined || endX === undefined || endY === undefined) {
+                        callback({
+                            success: false,
+                            message: '缺少必要参数'
+                        });
+                        return;
+                    }
+
+                    const galaxies = [];
+
+                    // 遍历指定范围内的星系网格
+                    for (let gridY = startY; gridY <= endY; gridY++) {
+                        for (let gridX = startX; gridX <= endX; gridX++) {
+                            // 跳过原点(0,0)和坐标轴上的星系，宇宙从±1开始
+                            if (gridX === 0 || gridY === 0) {
+                                continue;
+                            }
+
+                            // 生成星系ID
+                            const absX = Math.abs(gridX);
+                            const absY = Math.abs(gridY);
+                            const dirX = gridX > 0 ? 'E' : 'W';
+                            const dirY = gridY > 0 ? 'N' : 'S';
+                            const galaxyId = `${dirY}${absY}${dirX}${absX}`;
+
+                            // 生成星系中的所有行星
+                            const planets = generateGalaxyPlanets(galaxyId);
+
+                            galaxies.push({
+                                id: galaxyId,
+                                gridX,
+                                gridY,
+                                planets
+                            });
+                        }
+                    }
+
+                    callback({
+                        success: true,
+                        galaxies
+                    });
+                } catch (error) {
+                    console.error('获取星系数据失败:', error);
+                    callback({
+                        success: false,
+                        message: '获取星系数据失败'
+                    });
+                }
+            });
 
             // 获取星系中的所有行星
             socket.on('universe:get-galaxy-planets', async (data: { galaxyId: string }, callback) => {

@@ -16,28 +16,20 @@ export async function assignStartingPlanet(userId: string): Promise<Planet> {
     const userSeed = `${GLOBAL_SEED}_user_${userId}`;
     const rng = createSeededRandom(userSeed);
 
-    // 在较远的范围内随机选择一个星系坐标
-    const gridX = Math.floor((rng() - 0.5) * 100); // -50 到 50
-    const gridY = Math.floor((rng() - 0.5) * 100);
+    // 在较远的范围内随机选择一个星系坐标（避开0坐标）
+    let gridX = Math.floor((rng() - 0.5) * 100); // -50 到 50
+    let gridY = Math.floor((rng() - 0.5) * 100);
+
+    // 确保不在原点或坐标轴上
+    if (gridX === 0) gridX = rng() > 0.5 ? 1 : -1;
+    if (gridY === 0) gridY = rng() > 0.5 ? 1 : -1;
 
     // 生成星系ID
-    let galaxyId = '';
-    if (gridX === 0 && gridY === 0) {
-        galaxyId = '0';
-    } else {
-        const absX = Math.abs(gridX);
-        const absY = Math.abs(gridY);
-        const dirX = gridX > 0 ? 'E' : 'W';
-        const dirY = gridY > 0 ? 'N' : 'S';
-
-        if (gridX === 0) {
-            galaxyId = `${dirY}${absY}`;
-        } else if (gridY === 0) {
-            galaxyId = `${dirX}${absX}`;
-        } else {
-            galaxyId = `${dirY}${absY}${dirX}${absX}`;
-        }
-    }
+    const absX = Math.abs(gridX);
+    const absY = Math.abs(gridY);
+    const dirX = gridX > 0 ? 'E' : 'W';
+    const dirY = gridY > 0 ? 'N' : 'S';
+    const galaxyId = `${dirY}${absY}${dirX}${absX}`;
 
     // 生成该星系的所有行星
     const galaxyPlanets = generateGalaxyPlanets(galaxyId);

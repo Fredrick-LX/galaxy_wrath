@@ -38,12 +38,14 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch } from "vue";
+import { useRouter } from "vue-router";
 import * as PIXI from "pixi.js";
 import { Viewport } from "pixi-viewport";
 import { useUniverseStore } from "../stores/universe";
 import type { Galaxy } from "../types/galaxy";
 
 const universeStore = useUniverseStore();
+const router = useRouter();
 
 // 响应式变量
 const containerRef = ref<HTMLDivElement | null>(null);
@@ -101,18 +103,36 @@ async function initPixi() {
       percent: 0.1,
     })
     .decelerate()
-    .clamp({ direction: "all" })
     .clampZoom({
       minScale: 0.5,
-      maxScale: 1.5,
+      maxScale: 1.75,
     });
 
-  // 监听视口移动
+  // 监听视口移动和缩放（先设置监听器）
   viewport.on("moved", updateViewportInfo);
+  viewport.on("zoomed", updateViewportZoom);
 
-  // 初始化宇宙
-  universeStore.initUniverse();
+  // 先更新视口大小
   universeStore.updateViewportSize(width, height);
+
+  // 设置视口初始位置（恢复保存的状态或居中显示）
+  const savedState = universeStore.getSavedViewportState();
+  if (savedState) {
+    viewport.moveCenter(savedState.x, savedState.y);
+    viewport.setZoom(savedState.scale);
+    // 更新store的状态值，但不触发加载（skipLoad=true）
+    universeStore.updateViewportCenter(savedState.x, savedState.y, true);
+    universeStore.updateViewportScale(savedState.scale, true);
+    universeStore.clearSavedViewportState();
+  } else {
+    viewport.moveCenter(0, 0);
+    // 更新store的状态值，但不触发加载（skipLoad=true）
+    universeStore.updateViewportCenter(0, 0, true);
+    universeStore.updateViewportScale(1, true);
+  }
+
+  // 初始化宇宙（此时store已有正确的视口信息，会触发加载）
+  universeStore.initUniverse();
 
   // 开始渲染循环
   app.ticker.add(renderLoop);
@@ -132,6 +152,18 @@ function updateViewportInfo() {
 
   // 更新宇宙store
   universeStore.updateViewportCenter(viewport.center.x, viewport.center.y);
+}
+
+/**
+ * 更新视口缩放
+ */
+function updateViewportZoom() {
+  if (!viewport) return;
+  
+  zoom.value = viewport.scale.x;
+  
+  // 更新宇宙store的缩放
+  universeStore.updateViewportScale(viewport.scale.x);
 }
 
 let lastRenderTime = 0;
@@ -291,13 +323,24 @@ function renderGalaxy(galaxy: Galaxy): PIXI.Container {
     hitArea.on("pointerdown", (event) => {
       event.stopPropagation();
       console.log("点击行星:", planet.id, planet.name);
-      // TODO: 跳转到行星详情页
+      
+      // 保存当前视口状态
+      if (viewport) {
+        universeStore.saveViewportState(
+          viewport.center.x,
+          viewport.center.y,
+          viewport.scale.x
+        );
+      }
+      
+      // 跳转到行星详情页
+      router.push(`/planet/${planet.id}`);
     });
 
     container.addChild(hitArea);
 
-    // 仅在缩放较大时显示行星名称
-    if (viewport && viewport.scale.x > 0.8 && planet.name) {
+    // 显示行星名称（所有缩放级别）
+    if (planet.name) {
       const nameText = new PIXI.Text({
         text: planet.name,
         style: {
@@ -368,6 +411,18 @@ watch(
   () => universeStore.visibleGalaxies,
   () => {
     renderVisibleGalaxies();
+  },
+  { deep: true }
+);
+
+// 监听目标位置变化（用于定位功能）
+watch(
+  () => universeStore.targetPosition,
+  (newTarget) => {
+    if (newTarget && viewport) {
+      console.log(`🎯 移动视口到目标位置: (${newTarget.x}, ${newTarget.y})`);
+      viewport.moveCenter(newTarget.x, newTarget.y);
+    }
   },
   { deep: true }
 );

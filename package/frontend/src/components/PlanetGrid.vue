@@ -43,28 +43,34 @@
       </div>
     </div>
 
-    <!-- 悬浮信息提示 -->
-    <div v-if="hoveredCell" class="cell-tooltip" :style="tooltipStyle">
-      <div class="tooltip-content">
-        <div class="tooltip-position">
-          位置: ({{ hoveredCell.x }}, {{ hoveredCell.y }})
+    <!-- 区划信息面板（固定在右侧） -->
+    <div v-if="hoveredCell" class="zone-info-panel">
+      <h3>区划信息</h3>
+      <div class="info-content">
+        <div class="info-item">
+          <span class="label">位置:</span>
+          <span class="value">({{ hoveredCell.x }}, {{ hoveredCell.y }})</span>
         </div>
-        <div class="tooltip-zone">
-          区划:
-          {{ getZoneTypeName(planet.zones[hoveredCell.y][hoveredCell.x].type) }}
+        <div class="info-item">
+          <span class="label">区划类型:</span>
+          <span class="value">{{ getZoneTypeName(planet.zones[hoveredCell.y][hoveredCell.x].type) }}</span>
         </div>
         <div
           v-if="hasBuilding(hoveredCell.x, hoveredCell.y)"
-          class="tooltip-building"
+          class="building-details"
         >
-          <div class="building-name">
-            {{ getBuildingName(hoveredCell.x, hoveredCell.y) }}
+          <div class="info-item">
+            <span class="label">建筑:</span>
+            <span class="value">{{ getBuildingName(hoveredCell.x, hoveredCell.y) }}</span>
           </div>
-          <div class="building-info">
+          <div class="building-description">
             {{ getBuildingInfo(hoveredCell.x, hoveredCell.y) }}
           </div>
         </div>
-        <div v-else class="tooltip-empty">空地</div>
+        <div v-else class="empty-zone">
+          <span class="empty-label">空地</span>
+          <span class="empty-hint">点击建造建筑</span>
+        </div>
       </div>
     </div>
   </div>
@@ -93,15 +99,6 @@ const gridStyle = computed(() => ({
   gridTemplateColumns: `repeat(${props.planet.size}, 1fr)`,
   gridTemplateRows: `repeat(${props.planet.size}, 1fr)`,
 }));
-
-// 提示框样式
-const tooltipStyle = computed(() => {
-  if (!hoveredCell.value) return {};
-  return {
-    left: `${((hoveredCell.value.x + 1) * 100) / props.planet.size}%`,
-    top: `${((hoveredCell.value.y + 0.5) * 100) / props.planet.size}%`,
-  };
-});
 
 /**
  * 获取行星类型名称
@@ -367,48 +364,85 @@ function handleCellClick(x: number, y: number) {
   }
 }
 
-.cell-tooltip {
+/* 区划信息面板 - 固定在右侧 */
+.zone-info-panel {
   position: absolute;
-  z-index: 1000;
-  pointer-events: none;
-  transform: translateX(8px);
+  right: 20px;
+  top: 100px;
+  width: 280px;
+  background: linear-gradient(135deg, rgba(20, 30, 50, 0.95) 0%, rgba(30, 40, 60, 0.95) 100%);
+  border: 2px solid rgba(74, 144, 226, 0.5);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  z-index: 100;
+  backdrop-filter: blur(10px);
 }
 
-.tooltip-content {
-  background: rgba(20, 30, 50, 0.95);
-  border: 1px solid rgba(74, 144, 226, 0.5);
-  border-radius: 6px;
-  padding: 12px;
-  min-width: 200px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-  font-size: 12px;
-}
-
-.tooltip-position,
-.tooltip-zone {
-  color: #8fa3c1;
-  margin-bottom: 4px;
-}
-
-.tooltip-building {
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px solid rgba(74, 144, 226, 0.3);
-}
-
-.building-name {
+.zone-info-panel h3 {
+  margin: 0 0 16px 0;
   color: #4a90e2;
-  font-weight: 600;
-  margin-bottom: 4px;
+  font-size: 18px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid rgba(74, 144, 226, 0.3);
 }
 
-.building-info {
+.info-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+}
+
+.info-item .label {
+  color: #8fa3c1;
+  font-weight: 500;
+}
+
+.info-item .value {
   color: #b0c4de;
-  font-size: 11px;
+  font-weight: 600;
 }
 
-.tooltip-empty {
+.building-details {
+  background: rgba(74, 144, 226, 0.1);
+  border: 1px solid rgba(74, 144, 226, 0.3);
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 8px;
+}
+
+.building-description {
+  color: #b0c4de;
+  font-size: 13px;
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
+.empty-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px;
+  background: rgba(107, 123, 148, 0.1);
+  border-radius: 8px;
+}
+
+.empty-label {
   color: #6b7b94;
+  font-size: 14px;
   font-style: italic;
+}
+
+.empty-hint {
+  color: #4a90e2;
+  font-size: 12px;
 }
 </style>

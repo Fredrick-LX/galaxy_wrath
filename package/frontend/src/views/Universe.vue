@@ -68,12 +68,31 @@
           v-for="planet in myPlanets"
           :key="planet.id"
           class="planet-item"
-          @click="goToPlanet(planet.id)"
         >
-          <span class="planet-type">{{ getPlanetTypeName(planet.type) }}</span>
-          <span class="planet-id">{{ planet.id }}</span>
+          <div class="planet-info" @click="goToPlanet(planet.id)">
+            <span class="planet-type">{{ getPlanetTypeName(planet.type) }}</span>
+            <span class="planet-id">{{ planet.id }}</span>
+          </div>
+          <button 
+            class="btn-locate" 
+            @click.stop="locatePlanet(planet)"
+            title="定位到此行星(暂不可用)">
+            📍
+          </button>
         </div>
       </div>
+    </div>
+
+    <!-- 星系搜索框 -->
+    <div class="galaxy-search">
+      <input
+        v-model="searchGalaxyId"
+        @keyup.enter="searchGalaxy"
+        type="text"
+        placeholder="输入星系ID搜索 (有BUG，还不能用)"
+        class="search-input"
+      />
+      <button @click="searchGalaxy" class="btn-search">🔍 搜索</button>
     </div>
   </div>
 </template>
@@ -101,6 +120,9 @@ const myPlanets = ref<any[]>([]);
 
 // 加载中
 const loading = ref(true);
+
+// 星系搜索
+const searchGalaxyId = ref('');
 
 /**
  * 加载玩家数据
@@ -184,6 +206,90 @@ function getPlanetTypeName(type: string): string {
  */
 function goToPlanet(planetId: string) {
   router.push(`/planet/${planetId}`);
+}
+
+/**
+ * 定位到行星（移动视口到行星所在星系）
+ */
+function locatePlanet(planet: any) {
+  // 解析行星ID获取星系ID和位置
+  const [galaxyId] = planet.id.split('_');
+  
+  // 解析星系ID获取网格坐标
+  const coord = parseGalaxyId(galaxyId);
+  
+  // 计算星系中心的像素坐标（考虑四象限拼接）
+  const galaxySize = universeStore.config.galaxySize;
+  const centerX = coord.gridX > 0 
+    ? (coord.gridX - 0.5) * galaxySize 
+    : (coord.gridX + 0.5) * galaxySize;
+  const centerY = coord.gridY > 0 
+    ? (coord.gridY - 0.5) * galaxySize 
+    : (coord.gridY + 0.5) * galaxySize;
+  
+  // 使用 moveToPosition 移动视口
+  universeStore.moveToPosition(centerX, centerY);
+  
+  console.log(`📍 定位到行星 ${planet.id} (星系: ${galaxyId}, 坐标: ${centerX}, ${centerY})`);
+}
+
+/**
+ * 搜索星系
+ */
+function searchGalaxy() {
+  const galaxyId = searchGalaxyId.value.trim().toUpperCase();
+  
+  if (!galaxyId) {
+    alert('请输入星系ID');
+    return;
+  }
+  
+  try {
+    // 解析星系ID获取网格坐标
+    const coord = parseGalaxyId(galaxyId);
+    
+    // 计算星系中心的像素坐标（考虑四象限拼接）
+    const galaxySize = universeStore.config.galaxySize;
+    const centerX = coord.gridX > 0 
+      ? (coord.gridX - 0.5) * galaxySize 
+      : (coord.gridX + 0.5) * galaxySize;
+    const centerY = coord.gridY > 0 
+      ? (coord.gridY - 0.5) * galaxySize 
+      : (coord.gridY + 0.5) * galaxySize;
+    
+    // 使用 moveToPosition 移动视口
+    universeStore.moveToPosition(centerX, centerY);
+    
+    console.log(`🔍 搜索到星系 ${galaxyId} (网格: ${coord.gridX}, ${coord.gridY}, 像素: ${centerX}, ${centerY})`);
+    searchGalaxyId.value = ''; // 清空搜索框
+  } catch (error) {
+    alert('无效的星系ID格式！\n请使用格式: N1E1, S2W3 等');
+  }
+}
+
+/**
+ * 解析星系ID为网格坐标
+ */
+function parseGalaxyId(galaxyId: string): { gridX: number; gridY: number } {
+  const northMatch = galaxyId.match(/N(\d+)/);
+  const southMatch = galaxyId.match(/S(\d+)/);
+  const eastMatch = galaxyId.match(/E(\d+)/);
+  const westMatch = galaxyId.match(/W(\d+)/);
+
+  let x = 0;
+  let y = 0;
+
+  if (northMatch) y = parseInt(northMatch[1] || '0');
+  if (southMatch) y = -parseInt(southMatch[1] || '0');
+  if (eastMatch) x = parseInt(eastMatch[1] || '0');
+  if (westMatch) x = -parseInt(westMatch[1] || '0');
+
+  // 验证是否成功解析
+  if (x === 0 || y === 0) {
+    throw new Error('Invalid galaxy ID');
+  }
+
+  return { gridX: x, gridY: y };
 }
 
 /**
@@ -356,18 +462,26 @@ function handleLogout() {
 .planet-item {
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: space-between;
+  gap: 8px;
   padding: 10px 12px;
   background: rgba(74, 144, 226, 0.1);
   border: 1px solid rgba(74, 144, 226, 0.2);
   border-radius: 6px;
-  cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .planet-item:hover {
   background: rgba(74, 144, 226, 0.2);
   border-color: #4a90e2;
+}
+
+.planet-item .planet-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  cursor: pointer;
 }
 
 .planet-item .planet-type {
@@ -379,6 +493,74 @@ function handleLogout() {
   color: #8fa3c1;
   font-size: 12px;
   font-family: "Courier New", monospace;
+}
+
+.btn-locate {
+  padding: 4px 8px;
+  background: rgba(74, 144, 226, 0.2);
+  border: 1px solid rgba(74, 144, 226, 0.3);
+  border-radius: 4px;
+  color: #4a90e2;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.btn-locate:hover {
+  background: rgba(74, 144, 226, 0.3);
+  border-color: #4a90e2;
+  transform: scale(1.1);
+}
+
+/* 星系搜索框 */
+.galaxy-search {
+  position: absolute;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+}
+
+.search-input {
+  width: 300px;
+  padding: 10px 16px;
+  background: rgba(20, 30, 50, 0.85);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(74, 144, 226, 0.3);
+  border-radius: 8px;
+  color: #b0c4de;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.search-input:focus {
+  border-color: #4a90e2;
+  box-shadow: 0 0 12px rgba(74, 144, 226, 0.3);
+}
+
+.search-input::placeholder {
+  color: #6b7b94;
+}
+
+.btn-search {
+  padding: 10px 20px;
+  background: rgba(74, 144, 226, 0.2);
+  border: 1px solid rgba(74, 144, 226, 0.3);
+  border-radius: 8px;
+  color: #4a90e2;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+}
+
+.btn-search:hover {
+  background: rgba(74, 144, 226, 0.3);
+  border-color: #4a90e2;
 }
 
 /* 滚动条样式 */
